@@ -8,6 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -16,7 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.example.gettingstartedwithkmm.Greeting
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun MyApplicationTheme(
@@ -58,30 +67,37 @@ fun MyApplicationTheme(
 }
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MyApplicationTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
-                ) {
-                    Greeting(Greeting().greeting())
-                }
+                MainActivityContent(lifecycleScope)
             }
         }
     }
 }
 
 @Composable
-fun Greeting(text: String) {
-    Text(text = text)
-}
+fun MainActivityContent(lifecycleScope: LifecycleCoroutineScope) {
 
-@Preview
-@Composable
-fun DefaultPreview() {
-    MyApplicationTheme {
-        Greeting("Hello, Android!")
+    var text by remember { mutableStateOf("Loading...") }
+
+
+    LaunchedEffect("true") {
+        lifecycleScope.launch {
+            kotlin.runCatching {
+                Greeting().greeting()
+            }.onSuccess {
+                text = it
+            }
+        }
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colors.background
+    ) {
+        Text(text = text)
     }
 }
