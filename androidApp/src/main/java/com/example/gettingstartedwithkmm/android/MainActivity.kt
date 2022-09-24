@@ -1,30 +1,40 @@
 package com.example.gettingstartedwithkmm.android
 
 import android.os.Bundle
+import android.widget.Toolbar
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleCoroutineScope
 import com.example.gettingstartedwithkmm.Greeting
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.MainScope
+import com.example.gettingstartedwithkmm.domain.models.Reminder
+import com.example.gettingstartedwithkmm.domain.reminders.RemindersViewModel
+import com.example.gettingstartedwithkmm.ui.shared.base.MainViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -72,7 +82,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MyApplicationTheme {
-                MainActivityContent(lifecycleScope)
+                RemindersView()
             }
         }
     }
@@ -81,23 +91,119 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainActivityContent(lifecycleScope: LifecycleCoroutineScope) {
 
-    var text by remember { mutableStateOf("Loading...") }
+    val viewModel = MainViewModel()
 
+    var text by remember { mutableStateOf(Greeting().startMessage()) }
 
-    LaunchedEffect("true") {
-        lifecycleScope.launch {
-            kotlin.runCatching {
-                Greeting().greeting()
-            }.onSuccess {
-                text = it
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colors.background,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = text)
+            Button(onClick = {
+                lifecycleScope.launch {
+                    kotlin.runCatching {
+                        Greeting().greeting()
+                    }.onSuccess {
+                        text = it
+                    }
+                }
+            }) {
+                Text(text = "Trigger API call")
+            }
+            LazyColumn{
+                items(viewModel.items) {
+                    RowView(title = it.title, subtitle = it.subtitle)
+                }
             }
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colors.background
-    ) {
-        Text(text = text)
+}
+
+@Composable
+private fun RowView(
+    title: String,
+    subtitle: String,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(8.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.caption,
+                color = Color.Gray,
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.body1,
+            )
+        }
+        Divider()
+    }
+}
+
+@Composable
+fun RemindersView(
+    viewModel: RemindersViewModel = RemindersViewModel()
+) {
+    Column {
+        ContentView(viewModel = viewModel)
+    }
+}
+
+@Composable
+private fun ContentView(viewModel: RemindersViewModel) {
+    var reminders by remember {
+        mutableStateOf(listOf<Reminder>())
+    }
+
+    var textFieldValue by remember { mutableStateOf("") }
+
+    viewModel.onRemindersUpdated = {
+        reminders = it
+    }
+
+    LazyColumn(modifier = Modifier.fillMaxSize().height(200.dp)) {
+        items(items = reminders) { item ->
+
+            val onItemClick = {
+                viewModel.markReminder(id = item.id, isCompleted = !item.isCompleted)
+            }
+
+            ReminderItem(
+                title = item.title,
+                isCompleted = item.isCompleted,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = true, onClick = onItemClick)
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+        }
+
+        item {
+            val onSubmit = {
+                viewModel.createReminder(title = textFieldValue)
+                textFieldValue = ""
+            }
+            TextField(value = textFieldValue, onValueChange = {
+                textFieldValue = it
+            })
+            Button(onClick = onSubmit) {
+                Text(text = "Add reminder")
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReminderItem(title: String, isCompleted: Boolean, modifier: Modifier){
+    var _isCompleted by remember { mutableStateOf(isCompleted) }
+
+    Row(modifier = modifier) {
+        Text(text = title)
+        Checkbox(checked = _isCompleted, onCheckedChange = {
+            _isCompleted = it
+        })
     }
 }

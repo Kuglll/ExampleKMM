@@ -20,14 +20,16 @@ class Greeting {
         }
     }
 
-    private val platform: Platform = getPlatform()
+    private val platform: Platform = Platform()
+
+    fun startMessage() = "OS version: ${platform.osVersion} + \n Cpu type: ${platform.cpuType} \n device model: ${platform.deviceModel}"
 
     suspend fun greeting(): String {
 
         val rockets: List<RocketLaunch> = httpClient.get("https://api.spacexdata.com/v4/launches").body()
         val lastSuccessLaunch = rockets.last { it.launchSuccess == true }
 
-        return "Guess what it is! > ${platform.name.reversed()}!" +
+        return "Guess what it is! > ${platform.osVersion}!" +
             "\nThe last successful launch was ${lastSuccessLaunch.launchDateUTC} 🚀"
     }
 }

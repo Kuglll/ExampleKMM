@@ -6,16 +6,7 @@ plugins {
 
 kotlin {
     android()
-    
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach {
-        it.binaries.framework {
-            baseName = "shared"
-        }
-    }
+    ios()
 
     val ktorVersion = "2.0.2"
 
@@ -36,6 +27,7 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-android:$ktorVersion")
+                implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
             }
         }
         val androidTest by getting
@@ -47,18 +39,9 @@ kotlin {
                 implementation("io.ktor:ktor-client-darwin:$ktorVersion")
             }
             dependsOn(commonMain)
-            iosX64Main.dependsOn(this)
-            iosArm64Main.dependsOn(this)
-            iosSimulatorArm64Main.dependsOn(this)
         }
-        val iosX64Test by getting
-        val iosArm64Test by getting
-        val iosSimulatorArm64Test by getting
-        val iosTest by creating {
+        val iosTest by getting {
             dependsOn(commonTest)
-            iosX64Test.dependsOn(this)
-            iosArm64Test.dependsOn(this)
-            iosSimulatorArm64Test.dependsOn(this)
         }
     }
 }
