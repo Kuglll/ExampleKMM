@@ -40,4 +40,6 @@ dependencies {
     implementation("androidx.compose.material:material:1.2.1")
     implementation("androidx.activity:activity-compose:1.5.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.2")
+    implementation("io.insert-koin:koin-android:3.1.5")
+    implementation("io.insert-koin:koin-androidx-compose:3.1.5")
 }

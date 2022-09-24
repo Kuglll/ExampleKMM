@@ -4,9 +4,10 @@ import com.example.gettingstartedwithkmm.Platform
 import kotlin.math.max
 import kotlin.math.min
 
-class MainViewModel : PlatformViewModel(){
+class MainViewModel(
+    private val platform: Platform
+) : PlatformViewModel(){
 
-    private val platform = Platform()
     val items: List<RowItem> = makeRowItems(platform)
 
     data class RowItem(

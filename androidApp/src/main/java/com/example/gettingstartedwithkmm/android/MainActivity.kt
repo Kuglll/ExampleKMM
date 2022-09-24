@@ -1,7 +1,6 @@
 package com.example.gettingstartedwithkmm.android
 
 import android.os.Bundle
-import android.widget.Toolbar
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
@@ -15,7 +14,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.Checkbox
+import androidx.compose.material.Divider
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Shapes
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.Typography
+import androidx.compose.material.darkColors
+import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,11 +40,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleCoroutineScope
 import com.example.gettingstartedwithkmm.Greeting
-import androidx.lifecycle.lifecycleScope
 import com.example.gettingstartedwithkmm.domain.models.Reminder
 import com.example.gettingstartedwithkmm.domain.reminders.RemindersViewModel
+import com.example.gettingstartedwithkmm.initKoin
 import com.example.gettingstartedwithkmm.ui.shared.base.MainViewModel
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.getViewModel
+import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.dsl.module
 
 @Composable
 fun MyApplicationTheme(
@@ -80,6 +92,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        initKoin(viewModelsModule = module {
+            viewModel {
+                RemindersViewModel(get())
+            }
+        })
+
         setContent {
             MyApplicationTheme {
                 RemindersView()
@@ -89,9 +108,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainActivityContent(lifecycleScope: LifecycleCoroutineScope) {
-
-    val viewModel = MainViewModel()
+fun MainActivityContent(
+    lifecycleScope: LifecycleCoroutineScope,
+    viewModel: MainViewModel = getViewModel()
+) {
 
     var text by remember { mutableStateOf(Greeting().startMessage()) }
 
@@ -145,7 +165,7 @@ private fun RowView(
 
 @Composable
 fun RemindersView(
-    viewModel: RemindersViewModel = RemindersViewModel()
+    viewModel: RemindersViewModel = getViewModel()
 ) {
     Column {
         ContentView(viewModel = viewModel)
@@ -164,7 +184,9 @@ private fun ContentView(viewModel: RemindersViewModel) {
         reminders = it
     }
 
-    LazyColumn(modifier = Modifier.fillMaxSize().height(200.dp)) {
+    LazyColumn(modifier = Modifier
+        .fillMaxSize()
+        .height(200.dp)) {
         items(items = reminders) { item ->
 
             val onItemClick = {

@@ -1,15 +1,25 @@
 import com.example.gettingstartedwithkmm.domain.reminders.RemindersViewModel
+import com.example.gettingstartedwithkmm.initKoin
+import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
+import org.koin.core.context.stopKoin
+import org.koin.test.KoinTest
+import org.koin.test.inject
 
-class RemindersViewModelTest {
+class RemindersViewModelTest : KoinTest {
 
-    private lateinit var viewModel: RemindersViewModel
+    private val viewModel: RemindersViewModel by inject()
 
     @BeforeTest
-    fun setup(){
-        viewModel = RemindersViewModel()
+    fun setup() {
+        initKoin()
+    }
+
+    @AfterTest
+    fun tearDown() {
+        stopKoin()
     }
 
     @Test

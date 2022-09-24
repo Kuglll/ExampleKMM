@@ -3,11 +3,11 @@ package com.example.gettingstartedwithkmm.domain.reminders
 import com.example.gettingstartedwithkmm.domain.models.Reminder
 import com.example.gettingstartedwithkmm.ui.shared.base.PlatformViewModel
 
-class RemindersViewModel : PlatformViewModel() {
+class RemindersViewModel(
+    private val repository: RemindersRepository
+) : PlatformViewModel() {
 
-    private val repository = RemindersRepository()
-
-    private val reminders: List<Reminder>
+    internal val reminders: List<Reminder>
         get() = repository.reminders
 
     var onRemindersUpdated: ((List<Reminder>) -> Unit)? = null
