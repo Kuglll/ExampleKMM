@@ -42,4 +42,5 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.2")
     implementation("io.insert-koin:koin-android:3.1.5")
     implementation("io.insert-koin:koin-androidx-compose:3.1.5")
+    implementation("com.russhwolf:multiplatform-settings:0.9")
 }

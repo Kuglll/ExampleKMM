@@ -1,5 +1,7 @@
 package com.example.gettingstartedwithkmm.android
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -39,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.lifecycleScope
 import com.example.gettingstartedwithkmm.Greeting
 import com.example.gettingstartedwithkmm.domain.models.Reminder
 import com.example.gettingstartedwithkmm.domain.reminders.RemindersViewModel
@@ -93,15 +96,31 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        initKoin(viewModelsModule = module {
-            viewModel {
-                RemindersViewModel(get())
+        initKoin(
+            viewModelsModule = module {
+                viewModel {
+                    RemindersViewModel(get())
+                }
+                viewModel {
+                    MainViewModel(get(), get())
+                }
+            },
+            appModule = module {
+                single<Context> { this@MainActivity }
+
+                single<SharedPreferences> {
+                    get<Context>().getSharedPreferences(
+                        "MyApp",
+                        Context.MODE_PRIVATE
+                    )
+                }
             }
-        })
+        )
 
         setContent {
             MyApplicationTheme {
-                RemindersView()
+                //RemindersView()
+                MainActivityContent(lifecycleScope)
             }
         }
     }
@@ -132,11 +151,12 @@ fun MainActivityContent(
             }) {
                 Text(text = "Trigger API call")
             }
-            LazyColumn{
+            LazyColumn {
                 items(viewModel.items) {
                     RowView(title = it.title, subtitle = it.subtitle)
                 }
             }
+            Text(text = "This app was first opened: ${viewModel.firstOpening}")
         }
     }
 
@@ -184,9 +204,11 @@ private fun ContentView(viewModel: RemindersViewModel) {
         reminders = it
     }
 
-    LazyColumn(modifier = Modifier
-        .fillMaxSize()
-        .height(200.dp)) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .height(200.dp)
+    ) {
         items(items = reminders) { item ->
 
             val onItemClick = {
@@ -219,7 +241,7 @@ private fun ContentView(viewModel: RemindersViewModel) {
 }
 
 @Composable
-private fun ReminderItem(title: String, isCompleted: Boolean, modifier: Modifier){
+private fun ReminderItem(title: String, isCompleted: Boolean, modifier: Modifier) {
     var _isCompleted by remember { mutableStateOf(isCompleted) }
 
     Row(modifier = modifier) {
