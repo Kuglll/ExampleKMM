@@ -11,7 +11,7 @@ class DITest {
     fun testAllModules(){
         koinApplication{
             modules(
-                Modules.platforms,
+                Modules.core,
                 Modules.viewModels,
                 Modules.repositories
             )

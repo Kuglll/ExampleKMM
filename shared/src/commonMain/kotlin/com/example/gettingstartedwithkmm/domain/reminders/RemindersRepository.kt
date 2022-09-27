@@ -1,29 +1,28 @@
 package com.example.gettingstartedwithkmm.domain.reminders
 
+import com.example.gettingstartedwithkmm.db.DatabaseHelper
+import com.example.gettingstartedwithkmm.db.ReminderDb
 import com.example.gettingstartedwithkmm.domain.models.Reminder
 import com.example.gettingstartedwithkmm.domain.utils.UUID
 
-class RemindersRepository {
-
-    private val _reminders: MutableList<Reminder> = mutableListOf()
-
-    fun createReminder(title: String){
-        val newReminder = Reminder(
-            id = UUID().randomNumber,
-            title = title,
-            isCompleted = false
-        )
-        _reminders.add(newReminder)
-    }
-
-    fun markReminder(id: String, isCompleted: Boolean){
-        val index = _reminders.indexOfFirst { it.id == id }
-        if (index != -1) {
-            _reminders[index] = _reminders[index].copy(isCompleted = isCompleted)
-        }
-    }
+class RemindersRepository(
+    private val databaseHelper: DatabaseHelper
+) {
 
     val reminders: List<Reminder>
-        get() = _reminders
+        get() = databaseHelper.fetchAllItems().map(ReminderDb::map)
 
+    fun createReminder(title: String){
+        databaseHelper.insertReminder(UUID().randomNumber, title)
+    }
+
+    fun markReminder(id: String, isCompleted: Long){
+        databaseHelper.updateIsCompleted(id, isCompleted)
+    }
 }
+
+fun ReminderDb.map() = Reminder(
+    id = this.id,
+    title = this.title,
+    isCompleted = this.isCompleted,
+)

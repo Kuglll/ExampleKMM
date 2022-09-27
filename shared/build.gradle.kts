@@ -2,6 +2,7 @@ plugins {
     kotlin("multiplatform")
     id("com.android.library")
     kotlin("plugin.serialization") version "1.6.21"
+    id("com.squareup.sqldelight")
 }
 
 kotlin {
@@ -10,6 +11,7 @@ kotlin {
 
     val ktorVersion = "2.0.2"
     val koinVersion = "3.1.5"
+    val sqlDriver = "1.5.3"
 
     sourceSets {
         val commonMain by getting {
@@ -35,6 +37,7 @@ kotlin {
             dependencies {
                 implementation("io.ktor:ktor-client-android:$ktorVersion")
                 implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
+                implementation("com.squareup.sqldelight:android-driver:$sqlDriver")
             }
         }
         val androidTest by getting {
@@ -46,6 +49,7 @@ kotlin {
         val iosMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-darwin:$ktorVersion")
+                implementation("com.squareup.sqldelight:native-driver:$sqlDriver")
             }
             dependsOn(commonMain)
         }
@@ -72,5 +76,12 @@ Add the following at the end of the build.gradle.kts file:
 kotlin.targets.withType(org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget::class.java) {
     binaries.all {
         binaryOptions["memoryModel"] = "experimental"
+    }
+}
+
+sqldelight {
+    database("OrganizeDb") {
+        packageName = "com.example.gettingstartedwithkmm"
+        schemaOutputDirectory = file("src/commonMain/sqldelight/com/example/gettingstartedwithkmm/db")
     }
 }

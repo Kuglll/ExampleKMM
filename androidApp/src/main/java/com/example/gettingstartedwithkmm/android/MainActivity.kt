@@ -119,8 +119,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MyApplicationTheme {
-                //RemindersView()
-                MainActivityContent(lifecycleScope)
+                RemindersView()
+                //MainActivityContent(lifecycleScope)
             }
         }
     }
@@ -212,7 +212,7 @@ private fun ContentView(viewModel: RemindersViewModel) {
         items(items = reminders) { item ->
 
             val onItemClick = {
-                viewModel.markReminder(id = item.id, isCompleted = !item.isCompleted)
+                viewModel.markReminder(id = item.id, isCompleted = if (item.isCompleted == 0L) 1L else 0L)
             }
 
             ReminderItem(
@@ -241,13 +241,13 @@ private fun ContentView(viewModel: RemindersViewModel) {
 }
 
 @Composable
-private fun ReminderItem(title: String, isCompleted: Boolean, modifier: Modifier) {
+private fun ReminderItem(title: String, isCompleted: Long, modifier: Modifier) {
     var _isCompleted by remember { mutableStateOf(isCompleted) }
 
     Row(modifier = modifier) {
         Text(text = title)
-        Checkbox(checked = _isCompleted, onCheckedChange = {
-            _isCompleted = it
+        Checkbox(checked = _isCompleted == 1L, onCheckedChange = {
+            _isCompleted = if(it) 1L else 0L
         })
     }
 }
