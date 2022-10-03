@@ -34,11 +34,17 @@
 
 package com.raywenderlich.learn.domain
 
+import com.raywenderlich.learn.data.FeedAPI
+import com.raywenderlich.learn.data.model.GravatarEntry
 import com.raywenderlich.learn.data.model.PLATFORM
 import com.raywenderlich.learn.data.model.RWEntry
+import com.raywenderlich.learn.platform.Logger
 import com.soywiz.korio.serialization.xml.Xml
 import com.soywiz.korio.util.substringAfterOrNull
 import com.soywiz.korio.util.substringBeforeOrNull
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import kotlinx.coroutines.coroutineScope
 
 private const val TAG = "GetFeedData"
 
@@ -47,8 +53,74 @@ private const val WEBSITE_PREVIEW_START_DELIMITER =
 
 private const val WEBSITE_PREVIEW_END_DELIMITER = "\" />"
 
-public class GetFeedData {
-  //TODO: Chapter 12 - Networking
+class GetFeedData {
+
+  suspend fun invokeFetchRWEntry(
+    platform: PLATFORM,
+    feedUrl: String,
+    onSuccess: (List<RWEntry>) -> Unit,
+    onFailure: (Exception) -> Unit
+  ) {
+    try {
+        val result = FeedAPI.fetchRWEntry(feedUrl)
+        if(result.status.isSuccess()){
+            Logger.d(TAG, "invokeFetchRWEntry | feedUrl=$feedUrl")
+            //3
+            val xml = Xml.parse(result.bodyAsText())
+
+            val feed = mutableListOf<RWEntry>()
+            for (node in xml.allNodeChildren) {
+                val parsed = parseNode(platform, node)
+
+                if (parsed != null) {
+                    feed += parsed
+                }
+            }
+
+            //4
+            coroutineScope {
+                onSuccess(feed)
+            }
+
+        } else{
+            Logger.e(TAG, "Unable to fetch feed:$feedUrl.")
+        }
+
+    } catch (e: Exception){
+        Logger.e(TAG, "Unable to fetch feed:$feedUrl. Error: $e")
+
+        coroutineScope {
+            onFailure(e)
+        }
+    }
+  }
+
+  suspend fun invokeGetMyGravatar(
+    hash: String,
+    onSuccess: (GravatarEntry) -> Unit,
+    onFailure: (Exception) -> Unit
+  ) {
+    try {
+      val result = FeedAPI.fetchMyGravatar(hash)
+      Logger.d(TAG, "yGravatar | result=$result")
+
+      if (result.entry.isEmpty()) {
+        coroutineScope {
+          onFailure(Exception("No profile found for hash=$hash"))
+        }
+      } else {
+        coroutineScope {
+          onSuccess(result.entry[0])
+        }
+      }
+    } catch (e: Exception) {
+      Logger.e(TAG, "Unable to fetch my gravatar. Error: $e")
+      coroutineScope {
+        onFailure(e)
+      }
+    }
+  }
+
 }
 
 private fun parsePage(content: String): String {

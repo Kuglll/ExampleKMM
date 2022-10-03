@@ -34,12 +34,21 @@
 
 package com.raywenderlich.learn.presentation
 
+import com.raywenderlich.learn.data.model.GravatarEntry
+import com.raywenderlich.learn.data.model.PLATFORM
 import com.raywenderlich.learn.data.model.RWContent
 import com.raywenderlich.learn.domain.GetFeedData
+import com.raywenderlich.learn.domain.cb.FeedData
+import com.raywenderlich.learn.md5
+import com.raywenderlich.learn.platform.Logger
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 private const val TAG = "FeedPresenter"
+
+private const val GRAVATAR_EMAIL = "mdocevski@gmail.com"
 
 private const val RW_CONTENT = "[" +
     "{\"platform\":\"all\", \"url\":\"https://www.raywenderlich.com/feed.xml\", \"image\":\"https://assets.carolus.raywenderlich.com/assets/razeware_460-308933a0bda63e3e327123cab8002c0383a714cd35a10ade9bae9ca20b1f438b.png\"}," +
@@ -55,5 +64,38 @@ class FeedPresenter(private val feed: GetFeedData) {
 
   val content: List<RWContent> by lazy {
     json.decodeFromString(RW_CONTENT)
+  }
+
+  fun fetchMyGravatar(cb: FeedData) {
+    Logger.d(TAG, "fetchMyGravatar")
+
+    MainScope().launch {
+      feed.invokeGetMyGravatar(
+        hash = md5(GRAVATAR_EMAIL),
+        onSuccess = { cb.onMyGravatarData(it) },
+        onFailure = { cb.onMyGravatarData(GravatarEntry()) }
+      )
+    }
+  }
+
+  fun fetchAllFeeds(cb: FeedData){
+    for(feed in content){
+      fetchFeed(feed.platform, feed.url, cb)
+    }
+  }
+
+  fun fetchFeed(
+    platform: PLATFORM,
+    feedUrl: String,
+    cb: FeedData
+  ){
+    MainScope().launch {
+      feed.invokeFetchRWEntry(
+        platform,
+        feedUrl,
+        { cb.onNewDataAvailable(it, platform, null) },
+        { cb.onNewDataAvailable(emptyList(), platform, it) }
+      )
+    }
   }
 }

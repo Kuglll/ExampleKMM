@@ -38,12 +38,14 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.raywenderlich.learn.ServiceLocator
 import com.raywenderlich.learn.data.model.GravatarEntry
 import com.raywenderlich.learn.data.model.PLATFORM
 import com.raywenderlich.learn.data.model.RWEntry
 import com.raywenderlich.learn.domain.cb.FeedData
 import com.raywenderlich.learn.platform.Logger
+import kotlinx.coroutines.launch
 
 private const val TAG = "FeedViewModel"
 
@@ -63,16 +65,21 @@ class FeedViewModel : ViewModel(), FeedData {
 
   fun fetchAllFeeds() {
     Logger.d(TAG, "fetchAllFeeds")
+    presenter.fetchAllFeeds(this)
   }
 
   fun fetchMyGravatar() {
     Logger.d(TAG, "fetchMyGravatar")
+    presenter.fetchMyGravatar(this)
   }
 
   // region FeedData
 
   override fun onNewDataAvailable(items: List<RWEntry>, platform: PLATFORM, exception: Exception?) {
     Logger.d(TAG, "onNewDataAvailable | platform=$platform items=${items.size}")
+    viewModelScope.launch {
+      _items[platform] = items
+    }
   }
 
   override fun onNewImageUrlAvailable(
@@ -86,6 +93,9 @@ class FeedViewModel : ViewModel(), FeedData {
 
   override fun onMyGravatarData(item: GravatarEntry) {
     Logger.d(TAG, "onMyGravatarData | item=$item")
+    viewModelScope.launch {
+      _profile.value = item
+    }
   }
 
   // endregion FeedData
